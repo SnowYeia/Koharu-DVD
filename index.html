@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVD 屏保模拟</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: white;
+        }
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #dvd-logo {
+            position: absolute;
+            width: 150px; /* 初始宽度，将根据实际图像进行调整 */
+            height: auto;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <img id="dvd-logo" src="BF15E02CA68795E78AE219358DB0F7E5.gif" alt="DVD Logo">
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
