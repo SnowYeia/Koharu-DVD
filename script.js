@@ -6,6 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let containerWidth, containerHeight, logoWidth, logoHeight;
     let posX, posY, speedX, speedY;
     let animationStarted = false;
+    let lastFrameTime = null; // 用于基于时间的动画
+    
+    // 创建transformState对象跟踪变换状态，避免不必要的DOM更新
+    const transformState = {
+        scaleX: 1 // 初始值
+    };
     
     // 等待图像加载完成，以获取正确的尺寸
     logo.onload = function() {
@@ -35,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updatePosition(posX, posY, speedX);
             
             // 启动动画
-            animate();
+            requestAnimationFrame(animate);
             animationStarted = true;
         }
     }
@@ -56,11 +62,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 使用requestAnimationFrame实现平滑动画
-    function animate() {
-        // 更新位置
-        posX += speedX;
-        posY += speedY;
+    // 使用requestAnimationFrame实现平滑动画，基于时间的动画
+    function animate(currentTime) {
+        // 确保currentTime有值，防止首次调用时出现问题
+        if (currentTime === undefined) {
+            requestAnimationFrame(animate);
+            return;
+        }
+        
+        // 计算帧间隔时间，实现更平滑的动画
+        if (!lastFrameTime) lastFrameTime = currentTime;
+        const deltaTime = currentTime - lastFrameTime || 16.67; // 如果计算结果为0，使用默认的60fps帧率(约16.67ms)
+        lastFrameTime = currentTime;
+        
+        // 基于时间的位置更新，使动画速度在不同帧率下保持一致
+        // 使用系数0.06来调整速度，使其与原始速度相近
+        const timeScale = deltaTime * 0.06;
+        posX += speedX * timeScale;
+        posY += speedY * timeScale;
         
         // 检测碰撞 - 水平方向
         if (posX <= 0) {
@@ -87,18 +106,18 @@ document.addEventListener('DOMContentLoaded', function() {
         requestAnimationFrame(animate);
     }
     
-    // 更新Logo位置的辅助函数
+    // 更新Logo位置的辅助函数 - 使用transform代替left/top，启用GPU加速
     function updatePosition(x, y, speedX) {
-        logo.style.left = x + 'px';
-        logo.style.top = y + 'px';
-        
         // 根据X方向速度设置水平镜像
-        // 当speedX > 0（向右移动）时，应用水平镜像
-        if (speedX > 0) {
-            logo.style.transform = 'scaleX(-1)';
-        } else {
-            logo.style.transform = 'scaleX(1)';
+        const newScaleX = speedX > 0 ? -1 : 1;
+        
+        // 只有当transform状态变化时才更新
+        if (transformState.scaleX !== newScaleX) {
+            transformState.scaleX = newScaleX;
         }
+        
+        // 使用translate3d触发GPU加速，并合并所有transform属性
+        logo.style.transform = `translate3d(${x}px, ${y}px, 0) scaleX(${transformState.scaleX})`;
     }
     
     // 处理窗口大小变化
